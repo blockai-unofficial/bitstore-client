@@ -5,8 +5,8 @@ var bitcoin = require('bitcoinjs-lib');
 var url = require('url');
 
 var bitstoreClient = function (options) {
-  if (!options.privateKey) {
-    throw new Error('Must initialize client with private key.');
+  if (!options.privateKey && (!options.signMessage || !options.address)) {
+    throw new Error('Must initialize client with private key or signMessage function and address.');
   }
   if (!options.endpoint) {
     if (options.network === 'testnet') {
@@ -17,13 +17,22 @@ var bitstoreClient = function (options) {
     }
   }
 
-  var key = bitcoin.ECKey.fromWIF(options.privateKey);
-
   var network;
   if (options.network === 'testnet') {
     network = bitcoin.networks.testnet;
   }
-  var addressString = key.pub.getAddress(network).toString();
+
+  var signMessage = options.signMessage;
+  var addressString = options.address;
+
+  if (!options.signMessage) {
+    var key = bitcoin.ECKey.fromWIF(options.privateKey);
+    addressString = key.pub.getAddress(network).toString();
+    signMessage = function (message) {
+      var signature = bitcoin.Message.sign(key, message, network).toString('base64');
+      return signature;
+    };
+  }
 
   //var addressString = privKey.toPublicKey().toAddress().toString();
 
@@ -47,7 +56,7 @@ var bitstoreClient = function (options) {
         var message = url.parse(options.endpoint).host;
 
         // Sign host with private key
-        var signature = bitcoin.Message.sign(key, message, network).toString('base64');
+        var signature = signMessage(message);
 
         debug('Signature:', signature);
 
