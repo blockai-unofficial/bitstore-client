@@ -69,25 +69,28 @@ var bitstoreClient = function (options) {
   return {
     files: {
       put: function (opts, cb) {
-        if (typeof opts === 'string') {
-          if (opts.match(/^https?/)) {
-            // URL
-            req.post('/' + addressString)
-              .type('form')
-              .send({ remoteURL: opts })
-              .end(wrapCb(cb));
-          }
-          else {
-            var r = req.put('/' + addressString);
-            // File path
-            if (typeof opts === 'string') {
-              r.attach('file', opts);
-            }
-            r.end(wrapCb(cb));
-          }
+        if (!opts || typeof opts === 'function') {
+          throw new Error('Must specify URL, file path.');
+        }
+
+        if (typeof opts === 'string' && opts.match(/^https?/)) {
+          // URL
+          req.post('/' + addressString)
+            .type('form')
+            .send({ remoteURL: opts })
+            .end(wrapCb(cb));
         }
         else {
-          throw new Error('Must specify URL or file path.');
+          var r = req.put('/' + addressString);
+          // File path
+          if (typeof opts === 'string') {
+            r.attach('file', opts);
+          }
+          // HTML5 File object
+          else {
+            r.attach('file', opts);
+          }
+          r.end(wrapCb(cb));
         }
       },
       destroy: function (sha1, cb) {
