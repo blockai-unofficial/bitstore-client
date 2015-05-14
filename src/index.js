@@ -53,15 +53,36 @@ var bitstoreClient = function (options) {
         // X-BTC-Signature proves user knows privkey of pubkey
         // signature could be simply siging blokai.com or the whole
         // request...
-        var message = url.parse(options.endpoint).host;
 
-        // Sign host with private key
-        var signature = signMessage(message);
+        /**
+         * We need to mofify agent's end() function to be able
+         * to do an async call before callind end.
+         */
+        agent._end = agent.end;
+        agent.end = function (fn) {
+          var message = url.parse(options.endpoint).host;
+          // Sign host with private key
 
-        debug('Signature:', signature);
+          // Async
+          if (signMessage.length === 2) {
+            signMessage(message, function (err, signature) {
+              if (err) return fn(err);
+              debug('Signature:', signature);
+              agent.set('X-BTC-Address', addressString);
+              agent.set('X-BTC-Signature', signature);
+              return agent._end(fn);
+            });
+          }
+          // Sync
+          else {
+            var signature = signMessage(message);
+            debug('Signature:', signature);
+            agent.set('X-BTC-Address', addressString);
+            agent.set('X-BTC-Signature', signature);
+            return agent._end(fn);
+          }
+        };
 
-        agent.set('X-BTC-Address', addressString);
-        agent.set('X-BTC-Signature', signature);
 
         return agent;
       };
