@@ -1,0 +1,3 @@
+Build:
+
+npm run browserify

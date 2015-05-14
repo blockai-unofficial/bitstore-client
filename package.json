@@ -1,0 +1,41 @@
+{
+  "name": "bitstore",
+  "version": "0.0.1",
+  "description": "Bitstore client.",
+  "main": "./src/index.js",
+  "scripts": {
+    "browserify": "./node_modules/.bin/browserify ./src/index.js -s bitstore -o ./browser/bundle.js",
+    "test": "mocha --timeout=5000 --reporter=spec test/"
+  },
+  "bin": {
+    "bitstore": "./src/cli.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/blockai/bitstore-client.git"
+  },
+  "keywords": [
+    "bitstore",
+    "bitcoin",
+    "content-addressable"
+  ],
+  "author": "William Cotton <william@blockai.com>",
+  "contributors": [
+    "Olivier Lalonde <olalonde@gmail.com>"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/blockai/bitstore-client/issues"
+  },
+  "homepage": "https://github.com/blockai/bitstore-client",
+  "dependencies": {
+    "bitcoinjs-lib": "^1.5.7",
+    "debug": "^2.2.0",
+    "superagent": "^1.2.0"
+  },
+  "devDependencies": {
+    "browserify": "^10.2.0",
+    "mocha": "^2.2.4",
+    "should": "^6.0.1"
+  }
+}
