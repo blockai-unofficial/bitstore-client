@@ -1,7 +1,7 @@
 {
   "name": "bitstore",
   "version": "0.0.2",
-  "description": "Bitstore client.",
+  "description": "A content-addressable cloud storage web service that uses Bitcoin public key infrastructure for authentication and payment.",
   "main": "./src/index.js",
   "scripts": {
     "browserify": "./node_modules/.bin/browserify ./src/index.js -s bitstore -o ./browser/bundle.js",
