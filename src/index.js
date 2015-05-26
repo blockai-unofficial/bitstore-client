@@ -67,6 +67,8 @@ var bitstoreClient = function (options) {
           if (signMessage.length === 2) {
             signMessage(message, function (err, signature) {
               if (err) return fn(err);
+              debug('Address:', addressString);
+              debug('Message:', message);
               debug('Signature:', signature);
               agent.set('X-BTC-Address', addressString);
               agent.set('X-BTC-Signature', signature);
@@ -76,6 +78,8 @@ var bitstoreClient = function (options) {
           // Sync
           else {
             var signature = signMessage(message);
+            debug('Address:', addressString);
+            debug('Message:', message);
             debug('Signature:', signature);
             agent.set('X-BTC-Address', addressString);
             agent.set('X-BTC-Signature', signature);

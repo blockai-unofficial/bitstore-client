@@ -14,23 +14,27 @@ nconf
   .argv()
   .env('_')
   .defaults({
-    network: 'livenet'
   });
 
 var config = {};
-config.network = nconf.get('network');
+config.network = nconf.get('network') || 'livenet';
 config.privatekey = nconf.get('privatekey');
 config.host = 'http://bitstore.d.syskall.com';
 if (config.network === 'testnet') {
   config.host = 'http://bitstore-test.d.syskall.com';
 }
 
-config.host = nconf.get('host') || config.host;
+if (nconf.get('host')) {
+  config.host = nconf.get('host');
+  if (!nconf.get('network')) {
+    config.network = 'testnet';
+  }
+}
 
 
 // TODO: refactor with commander package
 function usage () {
-  console.error('Usage: PRIVATEKEY=somekey NETWORK=testnet ./cli.js action');
+  console.error('Usage: PRIVATEKEY=somekey NETWORK=testnet bitstore action');
   console.error('');
   console.error('Actions:');
   console.error('');
@@ -38,7 +42,7 @@ function usage () {
   console.error('');
   console.error('Example:');
   console.error('');
-  console.error('PRIVATEKEY=KyjhazeX7mXpHedQsKMuGh56o3rh8hm8FGhU3H6HPqfP9pA4YeoS ./cli.js put ../README.md');
+  console.error('PRIVATEKEY=KyjhazeX7mXpHedQsKMuGh56o3rh8hm8FGhU3H6HPqfP9pA4YeoS bitstore put ./README.md');
   process.exit(1);
 }
 
@@ -71,10 +75,12 @@ var actions = {
     if (process.argv.length < 4) usage();
     client.files.put(filepath, function (err, res) {
       if (err) {
-        console.error(err);
-        console.error('Error!');
-        console.error(err.status);
-        error(err.response.error);
+        if (err.response && err.response.error) {
+          error(err.response.error);
+        }
+        else {
+          error(err);
+        }
         return;
       }
       console.log(res);
