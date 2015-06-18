@@ -20,9 +20,9 @@ nconf
 var config = {};
 config.network = nconf.get('network');
 config.privatekey = nconf.get('privatekey');
-config.host = 'https://bitstore.d.blockai.com';
+config.host = 'https://bitstore.blockai.com';
 if (config.network === 'testnet') {
-  config.host = 'https://bitstore-test.d.blockai.com';
+  config.host = 'https://bitstore-test.blockai.com';
 }
 
 config.host = nconf.get('host') || config.host;

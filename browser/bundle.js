@@ -11,10 +11,10 @@ var bitstoreClient = function (options) {
   }
   if (!options.endpoint) {
     if (options.network === 'testnet') {
-      options.endpoint = 'https://bitstore-test.d.blockai.com';
+      options.endpoint = 'https://bitstore-test.blockai.com';
     }
     else {
-      options.endpoint = 'https://bitstore.d.blockai.com';
+      options.endpoint = 'https://bitstore.blockai.com';
     }
   }
 
