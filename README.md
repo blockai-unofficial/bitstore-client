@@ -1,6 +1,6 @@
 # bitstore
 
-A content-addressable cloud storage web service that uses Bitcoin public key infrastructure for authentication and payment.
+A content-addressable file hosting and distribution service that uses Bitcoin public key infrastructure for authentication and payment.
 
 The basic idea is that customers pay for the storage and retrieval costs of their digital media. Here at Blockai we are committed to building consumer products that never rely on advertising or selling personal data to third-party companies to cover our costs. In essence, we're building products where people own their own content and with that comes taking on financial responsibility.
 
