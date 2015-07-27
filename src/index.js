@@ -124,6 +124,11 @@ var bitstoreClient = function (options) {
           else {
             r.attach('file', opts);
           }
+          r.on('progress', function(e) {
+            if (opts.onProgress) {
+              opts.onProgress(e);
+            }
+          });
           r.end(wrapCb(cb));
         }
       },
