@@ -101,6 +101,7 @@ var bitstoreClient = function (options) {
   }
 
   return {
+    req: req,
     files: {
       put: function (opts, cb) {
         if (!opts || typeof opts === 'function') {
