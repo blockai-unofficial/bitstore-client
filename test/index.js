@@ -23,7 +23,7 @@ describe('bitstore-client', function () {
       if (err) return done(err);
       var wallet = res.body;
       wallet.address.should.equal('n3PDRtKoHXHNt8FU17Uu9Te81AnKLa7oyU');
-      wallet.balance.should.be.a.Number;
+      wallet.total_balance.should.be.a.Number;
       done();
     });
   });
@@ -45,7 +45,7 @@ describe('bitstore-client', function () {
       if (err) return done(err);
       var wallet = res.body;
       wallet.address.should.equal('n3PDRtKoHXHNt8FU17Uu9Te81AnKLa7oyU');
-      wallet.balance.should.be.a.Number;
+      wallet.total_balance.should.be.a.Number;
       done();
     });
   });
@@ -69,7 +69,7 @@ describe('bitstore-client', function () {
       if (err) return done(err);
       var wallet = res.body;
       wallet.address.should.equal('n3PDRtKoHXHNt8FU17Uu9Te81AnKLa7oyU');
-      wallet.balance.should.be.a.Number;
+      wallet.total_balance.should.be.a.Number;
       done();
     });
   });
