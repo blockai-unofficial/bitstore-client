@@ -149,6 +149,9 @@ var bitstoreClient = function (options) {
         req.get('/' + addressString + '/sha1/' + sha1)
           //.buffer()
           .end(wrapCb(cb));
+      },
+      uriPreview: function (sha1) {
+        return options.endpoint + '/' + addressString + '/sha1/' + sha1;
       }
     },
     wallet: {
