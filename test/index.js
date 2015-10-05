@@ -14,7 +14,8 @@ describe('bitstore-client', function () {
   it('should initialize with private key', function () {
     client = bitstore({
       privateKey: 'KyjhazeX7mXpHedQsKMuGh56o3rh8hm8FGhU3H6HPqfP9pA4YeoS',
-      network: 'testnet'
+      network: 'testnet',
+      host: process.env.bitstore_host,
     });
   });
 

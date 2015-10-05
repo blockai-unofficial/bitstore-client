@@ -154,6 +154,18 @@ var bitstoreClient = function (options) {
         return options.endpoint + '/' + addressString + '/sha1/' + sha1;
       }
     },
+    batch: function (paths, cb) {
+      var payload = {};
+      paths.forEach(function (path) {
+        payload[path] = {
+          method: 'GET',
+          uri: path,
+        };
+      });
+      req.post('/batch')
+        .send(payload)
+        .end(wrapCb(cb));
+    },
     wallet: {
       get: function (cb) {
         req.get('/' + addressString + '/wallet')

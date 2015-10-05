@@ -4,37 +4,50 @@ var debug = require('debug')('bitstore:cli');
 var nconf = require('nconf');
 var bitstoreClient = require('./index');
 
-// Case insensitive env variables so we can use env and argv variables
-// interchangeably.
-Object.keys(process.env).forEach(function (key) {
-  process.env[key.toLowerCase()] = process.env[key];
-});
-
-nconf
-  .argv()
-  .env('_')
-  .defaults({
-  });
-
-var config = {};
-config.network = nconf.get('network') || 'livenet';
-config.privatekey = nconf.get('privatekey');
-config.host = 'https://bitstore.blockai.com';
-if (config.network === 'testnet') {
-  config.host = 'https://bitstore-test.blockai.com';
-}
-
-if (nconf.get('host')) {
-  config.host = nconf.get('host');
-  if (!nconf.get('network')) {
-    config.network = 'testnet';
+function exit(text) {
+  if (text instanceof Error) {
+    console.error(text.stack);
+    if (text.response) {
+      if (text.response.body) console.error(text.response.body);
+      else console.error(text.text);
+    }
+  } else {
+    console.error(text);
   }
-}
+  process.exit(1);
+};
 
+function initConfig() {
+  var config = nconf
+    .env('_')
+    .defaults({
+      bitstore: {
+        network: 'livenet',
+      },
+    })
+    .get('bitstore');
+
+  var defaultHosts = {
+    livenet: 'https://bitstore.blockai.com',
+    testnet: 'https://bitstore-test.blockai.com',
+  };
+
+  if (!config.host) {
+    config.host = defaultHosts[config.network];
+  }
+
+  if (!config.privateKey) {
+    exit('`bitstore_privateKey` environment variable not set.');
+  }
+
+  return config;
+};
+
+var config = initConfig();
 
 // TODO: refactor with commander package
 function usage () {
-  console.error('Usage: PRIVATEKEY=somekey NETWORK=testnet bitstore action');
+  console.error('Usage: bitstore_privateKey=somekey bitstore_network=testnet bitstore action');
   console.error('');
   console.error('Actions:');
   console.error('');
@@ -42,11 +55,11 @@ function usage () {
   console.error('');
   console.error('Example:');
   console.error('');
-  console.error('PRIVATEKEY=KyjhazeX7mXpHedQsKMuGh56o3rh8hm8FGhU3H6HPqfP9pA4YeoS bitstore put ./README.md');
+  console.error('bitstore_privateKey=KyjhazeX7mXpHedQsKMuGh56o3rh8hm8FGhU3H6HPqfP9pA4YeoS bitstore put ./README.md');
   process.exit(1);
 }
 
-if (!config.privatekey) {
+if (!config.privateKey) {
   usage();
 }
 
@@ -57,7 +70,7 @@ var action = process.argv[2];
 var filepath = process.argv[3];
 
 var host = config.host;
-var privateKey = config.privatekey;
+var privateKey = config.privateKey;
 
 var client = bitstoreClient({
   privateKey: privateKey,
