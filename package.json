@@ -1,6 +1,6 @@
 {
   "name": "bitstore",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A content-addressable cloud storage web service that uses Bitcoin public key infrastructure for authentication and payment.",
   "main": "./src/index.js",
   "scripts": {
