@@ -140,6 +140,7 @@ const actions = {
 };
 
 actions.upload = actions.put;
+actions.txs = actions.transactions;
 
 if (!actions[action]) {
   error('Unknown command');
