@@ -7,11 +7,9 @@
     "test": "mocha test/ --opts mocha.opts",
     "pretest": "npm run lint",
     "prepublish": "babel ./src --out-dir ./lib --copy-files",
-    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
+    "semantic-release": "semantic-release pre"
   },
   "release": {
-    "debug": false,
-    "verifyConditions": "semantic-release/dist/lib/plugin-noop"
   },
   "bin": {
     "bitstore": "./lib/cli.js"
