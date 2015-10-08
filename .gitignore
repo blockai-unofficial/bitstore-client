@@ -29,3 +29,5 @@ node_modules
 
 *.sqlite3
 .tmp
+
+lib/

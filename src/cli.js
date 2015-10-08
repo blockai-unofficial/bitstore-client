@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 
-var debug = require('debug')('bitstore:cli');
-var nconf = require('nconf');
-var bitstoreClient = require('./index');
+/* eslint-disable no-console */
+
+// import initDebug from 'debug';
+import nconf from 'nconf';
+import bitstoreClient from './index';
+
+// const debug = initDebug('bitstore:cli');
 
 function exit(text) {
   if (text instanceof Error) {
@@ -15,10 +19,10 @@ function exit(text) {
     console.error(text);
   }
   process.exit(1);
-};
+}
 
 function initConfig() {
-  var config = nconf
+  const config = nconf
     .env('_')
     .defaults({
       bitstore: {
@@ -27,7 +31,7 @@ function initConfig() {
     })
     .get('bitstore');
 
-  var defaultHosts = {
+  const defaultHosts = {
     livenet: 'https://bitstore.blockai.com',
     testnet: 'https://bitstore-test.blockai.com',
   };
@@ -41,12 +45,12 @@ function initConfig() {
   }
 
   return config;
-};
+}
 
-var config = initConfig();
+const config = initConfig();
 
 // TODO: refactor with commander package
-function usage () {
+function usage() {
   console.error('Usage: bitstore_privateKey=somekey bitstore_network=testnet bitstore action');
   console.error('');
   console.error('Actions:');
@@ -66,16 +70,16 @@ if (!config.privateKey) {
 if (process.argv.length < 3) {
   usage();
 }
-var action = process.argv[2];
-var filepath = process.argv[3];
+const action = process.argv[2];
+const filepath = process.argv[3];
 
-var host = config.host;
-var privateKey = config.privateKey;
+const host = config.host;
+const privateKey = config.privateKey;
 
-var client = bitstoreClient({
+const client = bitstoreClient({
   privateKey: privateKey,
   endpoint: host,
-  network: config.network
+  network: config.network,
 });
 
 function error(err) {
@@ -83,15 +87,14 @@ function error(err) {
   process.exit(1);
 }
 
-var actions = {
-  put: function () {
+const actions = {
+  put: () => {
     if (process.argv.length < 4) usage();
-    client.files.put(filepath, function (err, res) {
+    client.files.put(filepath, (err, res) => {
       if (err) {
         if (err.response && err.response.error) {
           error(err.response.error);
-        }
-        else {
+        } else {
           error(err);
         }
         return;
@@ -101,44 +104,43 @@ var actions = {
       console.log(res.body);
     });
   },
-  list: function () {
-    client.files.index(function (err, res) {
+  list: () => {
+    client.files.index((err, res) => {
       if (err) return error(err);
       console.log(res.body);
     });
   },
-  deposit: function () {
-    client.wallet.deposit(function (err, res) {
+  deposit: () => {
+    client.wallet.deposit((err, res) => {
       if (err) return error(err);
       console.log(res.body);
     });
   },
-  withdraw: function () {
-    var amount = process.argv[3];
-    var address = process.argv[4];
+  withdraw: () => {
+    const amount = process.argv[3];
+    const address = process.argv[4];
 
-    client.wallet.withdraw(amount, address, function (err, res) {
+    client.wallet.withdraw(amount, address, (err, res) => {
       if (err) return error(err);
       console.log(res.body);
     });
   },
-  wallet: function () {
-    client.wallet.get(function (err, res) {
+  wallet: () => {
+    client.wallet.get((err, res) => {
       if (err) return error(err);
       console.log(res.body);
     });
   },
-  transactions: function () {
-    client.transactions.index(function (err, res) {
+  transactions: () => {
+    client.transactions.index((err, res) => {
       if (err) return error(err);
       console.log(res.body);
     });
-  }
+  },
 };
 
 if (!actions[action]) {
-  console.log(process.argv);
-  usage();
+  error('Unknown command');
 }
 
 actions[action]();

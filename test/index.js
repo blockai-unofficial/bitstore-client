@@ -1,17 +1,17 @@
-var should = require('should');
-var bitstore = require('../src/');
-var bitcoin = require('bitcoinjs-lib');
+import { expect } from 'chai';
+import bitstore from '../src';
+import bitcoin from 'bitcoinjs-lib';
 
-describe('bitstore-client', function () {
-  var client;
+describe('bitstore-client', () => {
+  let client;
 
-  it('should throw an error if no private key provided', function () {
-    (function () {
+  it('should throw an error if no private key provided', () => {
+    expect(() => {
       client = bitstore();
-    }).should.throw(/private/i);
+    }).to.throw(/private/i);
   });
 
-  it('should initialize with private key', function () {
+  it('should initialize with private key', () => {
     client = bitstore({
       privateKey: 'KyjhazeX7mXpHedQsKMuGh56o3rh8hm8FGhU3H6HPqfP9pA4YeoS',
       network: 'testnet',
@@ -19,60 +19,59 @@ describe('bitstore-client', function () {
     });
   });
 
-  it('should get wallet', function (done) {
-    client.wallet.get(function (err, res) {
+  it('should get wallet', (done) => {
+    client.wallet.get((err, res) => {
       if (err) return done(err);
-      var wallet = res.body;
-      wallet.address.should.equal('n3PDRtKoHXHNt8FU17Uu9Te81AnKLa7oyU');
-      wallet.total_balance.should.be.a.Number;
+      const wallet = res.body;
+      expect(wallet.address).to.equal('n3PDRtKoHXHNt8FU17Uu9Te81AnKLa7oyU');
+      expect(wallet.total_balance).to.be.a('number');
       done();
     });
   });
 
-  it('should initialize with signMessage function', function () {
+  it('should initialize with signMessage function', () => {
     client = bitstore({
       network: 'testnet',
       address: 'n3PDRtKoHXHNt8FU17Uu9Te81AnKLa7oyU',
-      signMessage: function (message) {
-        var key = bitcoin.ECKey.fromWIF('KyjhazeX7mXpHedQsKMuGh56o3rh8hm8FGhU3H6HPqfP9pA4YeoS');
-        var network = bitcoin.networks.testnet;
+      signMessage: (message) => {
+        const key = bitcoin.ECKey.fromWIF('KyjhazeX7mXpHedQsKMuGh56o3rh8hm8FGhU3H6HPqfP9pA4YeoS');
+        const network = bitcoin.networks.testnet;
         return bitcoin.Message.sign(key, message, network).toString('base64');
-      }
+      },
     });
   });
 
-  it('should get wallet', function (done) {
-    client.wallet.get(function (err, res) {
+  it('should get wallet', (done) => {
+    client.wallet.get((err, res) => {
       if (err) return done(err);
-      var wallet = res.body;
-      wallet.address.should.equal('n3PDRtKoHXHNt8FU17Uu9Te81AnKLa7oyU');
-      wallet.total_balance.should.be.a.Number;
+      const wallet = res.body;
+      expect(wallet.address).to.equal('n3PDRtKoHXHNt8FU17Uu9Te81AnKLa7oyU');
+      expect(wallet.total_balance).to.be.a('number');
       done();
     });
   });
 
-  it('should initialize with async signMessage function', function () {
+  it('should initialize with async signMessage function', () => {
     client = bitstore({
       network: 'testnet',
       address: 'n3PDRtKoHXHNt8FU17Uu9Te81AnKLa7oyU',
-      signMessage: function (message, cb) {
-        var key = bitcoin.ECKey.fromWIF('KyjhazeX7mXpHedQsKMuGh56o3rh8hm8FGhU3H6HPqfP9pA4YeoS');
-        var network = bitcoin.networks.testnet;
-        setImmediate(function () {
+      signMessage: (message, cb) => {
+        const key = bitcoin.ECKey.fromWIF('KyjhazeX7mXpHedQsKMuGh56o3rh8hm8FGhU3H6HPqfP9pA4YeoS');
+        const network = bitcoin.networks.testnet;
+        setImmediate(() => {
           cb(null, bitcoin.Message.sign(key, message, network).toString('base64'));
         });
-      }
+      },
     });
   });
 
-  it('should get wallet', function (done) {
-    client.wallet.get(function (err, res) {
+  it('should get wallet', (done) => {
+    client.wallet.get((err, res) => {
       if (err) return done(err);
-      var wallet = res.body;
-      wallet.address.should.equal('n3PDRtKoHXHNt8FU17Uu9Te81AnKLa7oyU');
-      wallet.total_balance.should.be.a.Number;
+      const wallet = res.body;
+      expect(wallet.address).to.equal('n3PDRtKoHXHNt8FU17Uu9Te81AnKLa7oyU');
+      expect(wallet.total_balance).to.be.a('number');
       done();
     });
   });
-
 });

@@ -1,14 +1,14 @@
 {
   "name": "bitstore",
-  "version": "0.1.0",
   "description": "A content-addressable cloud storage web service that uses Bitcoin public key infrastructure for authentication and payment.",
-  "main": "./src/index.js",
+  "main": "./lib/index.js",
   "scripts": {
-    "browserify": "./node_modules/.bin/browserify ./src/index.js -s bitstore -o ./browser/bundle.js",
-    "test": "mocha --timeout=5000 --reporter=spec test/"
+    "test": "npm run lint && ./node_modules/.bin/mocha test/ --opts mocha.opts",
+    "lint": "./node_modules/.bin/eslint ./src ./test",
+    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "bin": {
-    "bitstore": "./src/cli.js"
+    "bitstore": "./lib/cli.js"
   },
   "repository": {
     "type": "git",
@@ -35,8 +35,13 @@
     "superagent": "^1.2.0"
   },
   "devDependencies": {
+    "babel": "^5.8.23",
+    "babel-eslint": "^4.1.3",
     "browserify": "^10.2.0",
+    "chai": "^3.3.0",
+    "eslint": "^1.6.0",
+    "eslint-config-airbnb": "^0.1.0",
     "mocha": "^2.2.4",
-    "should": "^6.0.1"
+    "semantic-release": "^4.3.5"
   }
 }

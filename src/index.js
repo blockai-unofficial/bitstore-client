@@ -1,51 +1,52 @@
-var debug = require('debug')('bitstore');
-var superagent = require('superagent');
-var bitcoin = require('bitcoinjs-lib');
+import initDebug from 'debug';
+import superagent from 'superagent';
+import bitcoin from 'bitcoinjs-lib';
 // see https://github.com/bitpay/bitcore-message/issues/15
-var url = require('url');
+import url from 'url';
 
-var bitstoreClient = function (options) {
+const debug = initDebug('bitstore');
+
+export default (options) => {
   if (!options.privateKey && (!options.signMessage || !options.address)) {
     throw new Error('Must initialize client with private key or signMessage function and address.');
   }
   if (!options.endpoint) {
     if (options.network === 'testnet') {
       options.endpoint = 'https://bitstore-test.blockai.com';
-    }
-    else {
+    } else {
       options.endpoint = 'https://bitstore.blockai.com';
     }
   }
 
-  var network;
+  let network;
   if (options.network === 'testnet') {
     network = bitcoin.networks.testnet;
   }
 
-  var signMessage = options.signMessage;
-  var addressString = options.address;
+  let signMessage = options.signMessage;
+  let addressString = options.address;
 
   if (!options.signMessage) {
-    var key = bitcoin.ECKey.fromWIF(options.privateKey);
+    const key = bitcoin.ECKey.fromWIF(options.privateKey);
     addressString = key.pub.getAddress(network).toString();
-    signMessage = function (message) {
-      var signature = bitcoin.Message.sign(key, message, network).toString('base64');
+    signMessage = (message) => {
+      const signature = bitcoin.Message.sign(key, message, network).toString('base64');
       return signature;
     };
   }
 
-  //var addressString = privKey.toPublicKey().toAddress().toString();
+  // const addressString = privKey.toPublicKey().toAddress().toString();
 
   /**
    * Wrapper around superagent that automatically builds URLs
    * and adds authentication option.
    *
    */
-  var req = function () {
-    var req = {};
-    ['get', 'post', 'put', 'del'].forEach(function (method) {
-      req[method] = function (resource, cb) {
-        var agent = superagent[method](options.endpoint + resource);
+  const req = () => {
+    const reqObj = {};
+    ['get', 'post', 'put', 'del'].forEach((method) => {
+      reqObj[method] = (resource) => {
+        const agent = superagent[method](options.endpoint + resource);
         // TODO: set this as .auth() method on agent object
 
         // TODO: set X-BTC-Pubkey and X-BTC-Signature
@@ -59,13 +60,13 @@ var bitstoreClient = function (options) {
          * to do an async call before callind end.
          */
         agent._end = agent.end;
-        agent.end = function (fn) {
-          var message = url.parse(options.endpoint).host;
+        agent.end = (fn) => {
+          const message = url.parse(options.endpoint).host;
           // Sign host with private key
 
           // Async
           if (signMessage.length === 2) {
-            signMessage(message, function (err, signature) {
+            signMessage(message, (err, signature) => {
               if (err) return fn(err);
               debug('Address:', addressString);
               debug('Message:', message);
@@ -74,10 +75,9 @@ var bitstoreClient = function (options) {
               agent.set('X-BTC-Signature', signature);
               return agent._end(fn);
             });
-          }
-          // Sync
-          else {
-            var signature = signMessage(message);
+          } else {
+            // Sync
+            const signature = signMessage(message);
             debug('Address:', addressString);
             debug('Message:', message);
             debug('Signature:', signature);
@@ -91,11 +91,11 @@ var bitstoreClient = function (options) {
         return agent;
       };
     });
-    return req;
+    return reqObj;
   }();
 
-  function wrapCb (cb) {
-    return function (err, res) {
+  function wrapCb(cb) {
+    return (err, res) => {
       cb(err, res);
     };
   }
@@ -103,7 +103,7 @@ var bitstoreClient = function (options) {
   return {
     req: req,
     files: {
-      put: function (opts, cb) {
+      put: (opts, cb) => {
         if (!opts || typeof opts === 'function') {
           throw new Error('Must specify URL, file path.');
         }
@@ -114,49 +114,47 @@ var bitstoreClient = function (options) {
             .type('form')
             .send({ remoteURL: opts })
             .end(wrapCb(cb));
-        }
-        else {
-          var r = req.put('/' + addressString);
+        } else {
+          const request = req.put('/' + addressString);
           // File path
           if (typeof opts === 'string') {
-            r.attach('file', opts);
+            request.attach('file', opts);
+          } else {
+            // HTML5 File object
+            request.attach('file', opts);
           }
-          // HTML5 File object
-          else {
-            r.attach('file', opts);
-          }
-          r.on('progress', function(e) {
+          request.on('progress', (event) => {
             if (opts.onProgress) {
-              opts.onProgress(e);
+              opts.onProgress(event);
             }
           });
-          r.end(wrapCb(cb));
+          request.end(wrapCb(cb));
         }
       },
-      destroy: function (sha1, cb) {
+      destroy: (sha1, cb) => {
         req.del('/' + addressString + '/sha1/' + sha1)
           .end(wrapCb(cb));
       },
-      meta: function (sha1, cb) {
+      meta: (sha1, cb) => {
         req.get('/' + addressString + '/sha1/' + sha1 + '?meta')
           .end(wrapCb(cb));
       },
-      index: function (cb) {
+      index: (cb) => {
         req.get('/' + addressString)
           .end(wrapCb(cb));
       },
-      get: function (sha1, cb) {
+      get: (sha1, cb) => {
         req.get('/' + addressString + '/sha1/' + sha1)
-          //.buffer()
+          // .buffer()
           .end(wrapCb(cb));
       },
-      uriPreview: function (sha1) {
+      uriPreview: (sha1) => {
         return options.endpoint + '/' + addressString + '/sha1/' + sha1;
-      }
+      },
     },
-    batch: function (paths, cb) {
-      var payload = {};
-      paths.forEach(function (path) {
+    batch: (paths, cb) => {
+      const payload = {};
+      paths.forEach((path) => {
         payload[path] = {
           method: 'GET',
           uri: path,
@@ -167,33 +165,30 @@ var bitstoreClient = function (options) {
         .end(wrapCb(cb));
     },
     wallet: {
-      get: function (cb) {
+      get: (cb) => {
         req.get('/' + addressString + '/wallet')
           .end(wrapCb(cb));
       },
-      deposit: function (cb) {
+      deposit: (cb) => {
         req.get('/' + addressString + '/wallet')
-          .end(function (err, res) {
+          .end((err, res) => {
             res.body = {
-              deposit_address: res.body.deposit_address
+              deposit_address: res.body.deposit_address,
             };
             cb(err, res);
           });
       },
-      withdraw: function (amount, address, cb) {
+      withdraw: (amount, address, cb) => {
         req.post('/' + addressString + '/wallet/transactions')
-          .send({ type: 'withdraw' , address: address, amount: amount })
+          .send({ type: 'withdraw', address: address, amount: amount })
           .end(wrapCb(cb));
-
-      }
+      },
     },
     transactions: {
-      index: function (cb) {
+      index: (cb) => {
         req.get('/' + addressString + '/wallet/transactions')
           .end(wrapCb(cb));
-      }
-    }
+      },
+    },
   };
 };
-
-module.exports = bitstoreClient;
