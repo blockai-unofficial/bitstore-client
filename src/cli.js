@@ -139,6 +139,8 @@ const actions = {
   },
 };
 
+actions.upload = actions.put;
+
 if (!actions[action]) {
   error('Unknown command');
 }
