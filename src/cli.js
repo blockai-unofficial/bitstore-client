@@ -31,15 +31,6 @@ function initConfig() {
     })
     .get('bitstore');
 
-  const defaultHosts = {
-    livenet: 'https://bitstore.blockai.com',
-    testnet: 'https://bitstore-test.blockai.com',
-  };
-
-  if (!config.host) {
-    config.host = defaultHosts[config.network];
-  }
-
   if (!config.privateKey) {
     exit('`bitstore_privateKey` environment variable not set.');
   }
@@ -78,7 +69,7 @@ const privateKey = config.privateKey;
 
 const client = bitstoreClient({
   privateKey: privateKey,
-  endpoint: host,
+  host: host,
   network: config.network,
 });
 

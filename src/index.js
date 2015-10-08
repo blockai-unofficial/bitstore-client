@@ -6,16 +6,22 @@ import url from 'url';
 
 const debug = initDebug('bitstore');
 
+const defaultHosts = {
+  livenet: 'https://bitstore.blockai.com',
+  testnet: 'https://bitstore-test.blockai.com',
+};
+
 export default (options) => {
   if (!options.privateKey && (!options.signMessage || !options.address)) {
     throw new Error('Must initialize client with private key or signMessage function and address.');
   }
-  if (!options.endpoint) {
-    if (options.network === 'testnet') {
-      options.endpoint = 'https://bitstore-test.blockai.com';
-    } else {
-      options.endpoint = 'https://bitstore.blockai.com';
-    }
+
+  if (!options.network) {
+    options.network = 'livenet';
+  }
+
+  if (!options.host) {
+    options.host = defaultHosts[options.network];
   }
 
   let network;
@@ -46,7 +52,7 @@ export default (options) => {
     const reqObj = {};
     ['get', 'post', 'put', 'del'].forEach((method) => {
       reqObj[method] = (resource) => {
-        const agent = superagent[method](options.endpoint + resource);
+        const agent = superagent[method](options.host + resource);
         // TODO: set this as .auth() method on agent object
 
         // TODO: set X-BTC-Pubkey and X-BTC-Signature
@@ -61,7 +67,7 @@ export default (options) => {
          */
         agent._end = agent.end;
         agent.end = (fn) => {
-          const message = url.parse(options.endpoint).host;
+          const message = url.parse(options.host).host;
           // Sign host with private key
 
           // Async
@@ -149,7 +155,7 @@ export default (options) => {
           .end(wrapCb(cb));
       },
       uriPreview: (sha1) => {
-        return options.endpoint + '/' + addressString + '/sha1/' + sha1;
+        return options.host + '/' + addressString + '/sha1/' + sha1;
       },
     },
     batch: (paths, cb) => {
