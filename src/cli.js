@@ -5,6 +5,7 @@
 // import initDebug from 'debug';
 import nconf from 'nconf';
 import bitstoreClient from './index';
+import pkg from '../package.json';
 
 // const debug = initDebug('bitstore:cli');
 
@@ -127,6 +128,9 @@ const actions = {
       if (err) return error(err);
       console.log(res.body);
     });
+  },
+  version: () => {
+    console.log(pkg.version);
   },
 };
 
