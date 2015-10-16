@@ -9,8 +9,7 @@
     "prepublish": "babel ./src --out-dir ./lib --copy-files",
     "semantic-release": "semantic-release pre"
   },
-  "release": {
-  },
+  "release": {},
   "bin": {
     "bitstore": "./lib/cli.js"
   },
@@ -36,7 +35,8 @@
     "bitcoinjs-lib": "^1.5.7",
     "debug": "^2.2.0",
     "nconf": "^0.7.1",
-    "superagent": "^1.2.0"
+    "superagent": "^1.2.0",
+    "superagent-as-promised": "^3.2.0"
   },
   "devDependencies": {
     "babel": "^5.8.23",

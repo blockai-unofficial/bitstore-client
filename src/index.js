@@ -1,8 +1,13 @@
 import initDebug from 'debug';
 import superagent from 'superagent';
+import patchSuperagent from 'superagent-as-promised';
+
 import bitcoin from 'bitcoinjs-lib';
 // see https://github.com/bitpay/bitcore-message/issues/15
 import url from 'url';
+
+// Patch superagent to support promises
+patchSuperagent(superagent);
 
 const debug = initDebug('bitstore');
 
@@ -60,6 +65,26 @@ export default (options) => {
         // X-BTC-Signature proves user knows privkey of pubkey
         // signature could be simply siging blokai.com or the whole
         // request...
+        const errFromResponse = (res) => {
+          const err = new Error(res.body.error ? res.body.error : res.status.toString());
+          err.status = res.status;
+          return err;
+        };
+
+        agent.result = (optionalField) => {
+          return agent.then((res) => {
+            if (typeof(res.status) === 'number' && res.status >= 200 && res.status < 300) {
+              return optionalField ? res.body[optionalField] : res.body;
+            }
+            throw errFromResponse(res);
+          })
+          .catch((err) => {
+            if (err.response) {
+              throw errFromResponse(err.response);
+            }
+            throw err;
+          });
+        };
 
         /**
          * We need to mofify agent's end() function to be able
@@ -100,12 +125,6 @@ export default (options) => {
     return reqObj;
   }();
 
-  function wrapCb(cb) {
-    return (err, res) => {
-      cb(err, res);
-    };
-  }
-
   return {
     req: req,
     files: {
@@ -116,43 +135,49 @@ export default (options) => {
 
         if (typeof opts === 'string' && opts.match(/^https?/)) {
           // URL
-          req.post('/' + addressString)
+          return req.post('/' + addressString)
             .type('form')
             .send({ remoteURL: opts })
-            .end(wrapCb(cb));
-        } else {
-          const request = req.put('/' + addressString);
-          // File path
-          if (typeof opts === 'string') {
-            request.attach('file', opts);
-          } else {
-            // HTML5 File object
-            request.attach('file', opts);
-          }
-          request.on('progress', (event) => {
-            if (opts.onProgress) {
-              opts.onProgress(event);
-            }
-          });
-          request.end(wrapCb(cb));
+            .result()
+            .nodeify(cb);
         }
+        const request = req.put('/' + addressString);
+        // File path
+        if (typeof opts === 'string') {
+          request.attach('file', opts);
+        } else {
+          // HTML5 File object
+          request.attach('file', opts);
+        }
+        request.on('progress', (event) => {
+          if (opts.onProgress) {
+            opts.onProgress(event);
+          }
+        });
+        return request
+          .result()
+          .nodeify(cb);
       },
       destroy: (sha1, cb) => {
-        req.del('/' + addressString + '/sha1/' + sha1)
-          .end(wrapCb(cb));
+        return req.del('/' + addressString + '/sha1/' + sha1)
+          .result()
+          .nodeify(cb);
       },
       meta: (sha1, cb) => {
-        req.get('/' + addressString + '/sha1/' + sha1 + '?meta')
-          .end(wrapCb(cb));
+        return req.get('/' + addressString + '/sha1/' + sha1 + '?meta')
+          .result()
+          .nodeify(cb);
       },
       index: (cb) => {
-        req.get('/' + addressString)
-          .end(wrapCb(cb));
+        return req.get('/' + addressString)
+          .result()
+          .nodeify(cb);
       },
       get: (sha1, cb) => {
-        req.get('/' + addressString + '/sha1/' + sha1)
+        return req.get('/' + addressString + '/sha1/' + sha1)
           // .buffer()
-          .end(wrapCb(cb));
+          .result()
+          .nodeify(cb);
       },
       uriPreview: (sha1) => {
         return options.host + '/' + addressString + '/sha1/' + sha1;
@@ -166,34 +191,40 @@ export default (options) => {
           uri: path,
         };
       });
-      req.post('/batch')
+      return req.post('/batch')
         .send(payload)
-        .end(wrapCb(cb));
+        .result()
+        .nodeify(cb);
     },
     wallet: {
       get: (cb) => {
-        req.get('/' + addressString + '/wallet')
-          .end(wrapCb(cb));
+        return req.get('/' + addressString + '/wallet')
+          .result()
+          .nodeify(cb);
       },
       deposit: (cb) => {
-        req.get('/' + addressString + '/wallet')
+        return req.get('/' + addressString + '/wallet')
           .end((err, res) => {
             res.body = {
               deposit_address: res.body.deposit_address,
             };
             cb(err, res);
-          });
+          })
+          .result()
+          .nodeify(cb);
       },
       withdraw: (amount, address, cb) => {
-        req.post('/' + addressString + '/wallet/transactions')
+        return req.post('/' + addressString + '/wallet/transactions')
           .send({ type: 'withdraw', address: address, amount: amount })
-          .end(wrapCb(cb));
+          .result()
+          .nodeify(cb);
       },
     },
     transactions: {
       index: (cb) => {
-        req.get('/' + addressString + '/wallet/transactions')
-          .end(wrapCb(cb));
+        return req.get('/' + addressString + '/wallet/transactions')
+          .result()
+          .nodeify(cb);
       },
     },
   };

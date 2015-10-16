@@ -20,12 +20,18 @@ describe('bitstore-client', () => {
   });
 
   it('should get wallet', (done) => {
-    client.wallet.get((err, res) => {
+    client.wallet.get((err, wallet) => {
       if (err) return done(err);
-      const wallet = res.body;
       expect(wallet.address).to.equal('n3PDRtKoHXHNt8FU17Uu9Te81AnKLa7oyU');
       expect(wallet.total_balance).to.be.a('number');
       done();
+    });
+  });
+
+  it('should get wallet (promise api)', () => {
+    return client.wallet.get().then((wallet) => {
+      expect(wallet.address).to.equal('n3PDRtKoHXHNt8FU17Uu9Te81AnKLa7oyU');
+      expect(wallet.total_balance).to.be.a('number');
     });
   });
 
@@ -42,9 +48,8 @@ describe('bitstore-client', () => {
   });
 
   it('should get wallet', (done) => {
-    client.wallet.get((err, res) => {
+    client.wallet.get((err, wallet) => {
       if (err) return done(err);
-      const wallet = res.body;
       expect(wallet.address).to.equal('n3PDRtKoHXHNt8FU17Uu9Te81AnKLa7oyU');
       expect(wallet.total_balance).to.be.a('number');
       done();
@@ -66,9 +71,8 @@ describe('bitstore-client', () => {
   });
 
   it('should get wallet', (done) => {
-    client.wallet.get((err, res) => {
+    client.wallet.get((err, wallet) => {
       if (err) return done(err);
-      const wallet = res.body;
       expect(wallet.address).to.equal('n3PDRtKoHXHNt8FU17Uu9Te81AnKLa7oyU');
       expect(wallet.total_balance).to.be.a('number');
       done();
