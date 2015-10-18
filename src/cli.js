@@ -1,145 +1,152 @@
 #!/usr/bin/env node
-
 /* eslint-disable no-console */
 
-// import initDebug from 'debug';
+import commander from 'commander';
+import cliPkg from '../package.json';
+import chalk from 'chalk';
 import nconf from 'nconf';
-import bitstoreClient from './index';
-import pkg from '../package.json';
+import path from 'path';
+import bitstoreClient from './';
+import { inspect } from 'util';
 
-// const debug = initDebug('bitstore:cli');
-
-function exit(text) {
+const exit = (text) => {
   if (text instanceof Error) {
-    console.error(text.stack);
+    console.error(chalk.red(text.stack));
     if (text.response) {
       if (text.response.body) console.error(text.response.body);
       else console.error(text.text);
     }
   } else {
-    console.error(text);
+    console.error(chalk.red(text));
   }
   process.exit(1);
-}
+};
 
-function initConfig() {
+const success = (text) => {
+  if (text.body) {
+    console.log(chalk.green(inspect(text.body)));
+  } else {
+    console.log(text);
+  }
+  process.exit(0);
+};
+
+const initConfig = () => {
   const config = nconf
-    .env('_')
+    .file(path.join(process.env.HOME, '.bitstore'))
     .defaults({
-      bitstore: {
-        network: 'livenet',
-      },
+      network: 'livenet',
     })
-    .get('bitstore');
+    .get();
+
+  const defaultHosts = {
+    livenet: 'https://bitstore.blockai.com',
+    testnet: 'https://bitstore-test.blockai.com',
+  };
+
+  if (!config.host) {
+    config.host = defaultHosts[config.network];
+  }
 
   if (!config.privateKey) {
-    exit('`bitstore_privateKey` environment variable not set.');
+    exit(`Configure { privateKey: "" } in ${process.env.HOME}/.bitstore`);
   }
 
   return config;
-}
-
-const config = initConfig();
-
-// TODO: refactor with commander package
-function usage() {
-  console.error('Usage: bitstore_privateKey=somekey bitstore_network=testnet bitstore action');
-  console.error('');
-  console.error('Actions:');
-  console.error('');
-  console.error('put <path> Upload a file');
-  console.error('');
-  console.error('Example:');
-  console.error('');
-  console.error('bitstore_privateKey=KyjhazeX7mXpHedQsKMuGh56o3rh8hm8FGhU3H6HPqfP9pA4YeoS bitstore put ./README.md');
-  process.exit(1);
-}
-
-if (!config.privateKey) {
-  usage();
-}
-
-if (process.argv.length < 3) {
-  usage();
-}
-const action = process.argv[2];
-const filepath = process.argv[3];
-
-const host = config.host;
-const privateKey = config.privateKey;
-
-const client = bitstoreClient({
-  privateKey: privateKey,
-  host: host,
-  network: config.network,
-});
-
-function error(err) {
-  console.error(err);
-  process.exit(1);
-}
-
-const actions = {
-  put: () => {
-    if (process.argv.length < 4) usage();
-    client.files.put(filepath, (err, res) => {
-      if (err) {
-        if (err.response && err.response.error) {
-          error(err.response.error);
-        } else {
-          error(err);
-        }
-        return;
-      }
-      console.log(res);
-      console.log(res.status);
-      console.log(res.body);
-    });
-  },
-  list: () => {
-    client.files.index((err, res) => {
-      if (err) return error(err);
-      console.log(res.body);
-    });
-  },
-  deposit: () => {
-    client.wallet.deposit((err, res) => {
-      if (err) return error(err);
-      console.log(res.body);
-    });
-  },
-  withdraw: () => {
-    const amount = process.argv[3];
-    const address = process.argv[4];
-
-    client.wallet.withdraw(amount, address, (err, res) => {
-      if (err) return error(err);
-      console.log(res.body);
-    });
-  },
-  wallet: () => {
-    client.wallet.get((err, res) => {
-      if (err) return error(err);
-      console.log(res.body);
-    });
-  },
-  transactions: () => {
-    client.transactions.index((err, res) => {
-      if (err) return error(err);
-      console.log(res.body);
-    });
-  },
-  version: () => {
-    console.log(pkg.version);
-  },
 };
 
-actions.upload = actions.put;
-actions.txs = actions.transactions;
+const initClient = (_config) => {
+  const config = _config || initConfig();
+  return bitstoreClient({
+    privateKey: config.privateKey,
+    endpoint: config.host,
+    network: config.network,
+  });
+};
 
-if (!actions[action]) {
-  error('Unknown command');
-}
+commander
+  .version('bitstore version: ' + cliPkg.version + '\n');
 
-actions[action]();
+commander
+  .command('files')
+  .description('list uploaded files')
+  .action(() => {
+    const client = initClient();
+    client.files.index().then(success).catch(exit);
+  });
 
+commander
+  .command('files:put <filePath>')
+  .alias('upload')
+  .description('upload local file or url')
+  .action((filePath) => {
+    const client = initClient();
+    client.files.put(filePath).then(success).catch(exit);
+  });
+
+commander
+  .command('files:meta <sha1>')
+  .description('file metadata')
+  .action((sha1) => {
+    const client = initClient();
+    client.files.meta(sha1).then(success).catch(exit);
+  });
+
+commander
+  .command('files:torrent <sha1>')
+  .description('torrent json')
+  .action((sha1) => {
+    const client = initClient();
+    client.files.torrent(sha1, { json: true }).then(success).catch(exit);
+  });
+
+commander
+  .command('files:destroy <sha1>')
+  .alias('rm')
+  .description('destroy file')
+  .action((sha1) => {
+    const client = initClient();
+    client.files.destroy(sha1).then(success).catch(exit);
+  });
+
+commander
+  .command('wallet')
+  .description('show wallet')
+  .action(() => {
+    const client = initClient();
+    client.wallet.get().then(success).catch(exit);
+  });
+
+commander
+  .command('wallet:deposit')
+  .description('deposit to wallet')
+  .action(() => {
+    const client = initClient();
+    client.wallet.deposit().then(success).catch(exit);
+  });
+
+commander
+  .command('wallet:withdraw <amount> <address>')
+  .description('withdraw from wallet')
+  .action((amount, address) => {
+    const client = initClient();
+    client.wallet.withdraw(amount, address).then(success).catch(exit);
+  });
+
+commander
+  .command('transactions')
+  .description('list transactions')
+  .action(() => {
+    const client = initClient();
+    client.transactions.index().then(success).catch(exit);
+  });
+
+commander
+  .command('status')
+  .description('bitstore server status')
+  .action(() => {
+    const client = initClient();
+    client.status().then(success).catch(exit);
+  });
+
+commander.parse(process.argv);

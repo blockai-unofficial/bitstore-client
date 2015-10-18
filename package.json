@@ -5,9 +5,11 @@
   "scripts": {
     "lint": "eslint ./src ./test",
     "test": "mocha test/ --opts mocha.opts",
+    "build": "babel ./src --out-dir ./lib --copy-files",
     "pretest": "npm run lint",
-    "prepublish": "babel ./src --out-dir ./lib --copy-files",
-    "semantic-release": "semantic-release pre"
+    "prepublish": "npm run build",
+    "semantic-release": "semantic-release pre",
+    "cli": "babel-node -- ./src/cli.js"
   },
   "release": {},
   "bin": {
@@ -33,6 +35,8 @@
   "homepage": "https://github.com/blockai/bitstore-client",
   "dependencies": {
     "bitcoinjs-lib": "^1.5.7",
+    "chalk": "^1.1.1",
+    "commander": "^2.9.0",
     "debug": "^2.2.0",
     "nconf": "^0.7.1",
     "superagent": "^1.2.0",

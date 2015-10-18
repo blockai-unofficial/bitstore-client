@@ -1,6 +1,7 @@
 import initDebug from 'debug';
 import superagent from 'superagent';
 import patchSuperagent from 'superagent-as-promised';
+import path from 'path';
 
 import bitcoin from 'bitcoinjs-lib';
 // see https://github.com/bitpay/bitcore-message/issues/15
@@ -14,6 +15,16 @@ const debug = initDebug('bitstore');
 const defaultHosts = {
   livenet: 'https://bitstore.blockai.com',
   testnet: 'https://bitstore-test.blockai.com',
+};
+
+const bufParser = (res, fn) => {
+  const data = []; // Binary data needs binary storage
+  res.on('data', (chunk) => {
+    data.push(chunk);
+  });
+  res.on('end', () => {
+    fn(null, Buffer.concat(data));
+  });
 };
 
 export default (options) => {
@@ -40,8 +51,11 @@ export default (options) => {
   if (!options.signMessage) {
     const key = bitcoin.ECKey.fromWIF(options.privateKey);
     addressString = key.pub.getAddress(network).toString();
+    const memo = {};
     signMessage = (message) => {
+      if (memo[message]) return memo[message];
       const signature = bitcoin.Message.sign(key, message, network).toString('base64');
+      memo[message] = signature;
       return signature;
     };
   }
@@ -66,15 +80,45 @@ export default (options) => {
         // signature could be simply siging blokai.com or the whole
         // request...
         const errFromResponse = (res) => {
-          const err = new Error(res.body.error ? res.body.error : res.status.toString());
+          const errInfo = res.body.error ? res.body.error : {
+            message: res.status.toString(),
+          };
+
+          const err = new Error(errInfo.message);
+
+          Object.keys(errInfo).forEach((key) => {
+            err[key] = errInfo[key];
+          });
+
           err.status = res.status;
           return err;
         };
 
+        /*
+        agent.resultBuffer = () => {
+          let buf = new Buffer([]);
+
+          return agent.then((res) => {
+            return BPromise((resolve, reject) => {
+              res.on('data', (data) => {
+                buf = Buffer.concat([ torrentBuf, data ]);
+              });
+
+              res.on('end', () => {
+                return resolve(buf);
+              });
+            });
+          });
+        };
+        */
+
         agent.result = (optionalField) => {
           return agent.then((res) => {
             if (typeof(res.status) === 'number' && res.status >= 200 && res.status < 300) {
-              return optionalField ? res.body[optionalField] : res.body;
+              if (Array.isArray(res.body) || Object.keys(res.body).length) {
+                return optionalField ? res.body[optionalField] : res.body;
+              }
+              return res.text;
             }
             throw errFromResponse(res);
           })
@@ -125,8 +169,12 @@ export default (options) => {
     return reqObj;
   }();
 
+  // Override default address for testing auth in bitstore
+  const addressPath = options.addressPath ? options.addressPath : addressString;
+
   return {
     req: req,
+    address: addressString,
     files: {
       put: (opts, cb) => {
         if (!opts || typeof opts === 'function') {
@@ -135,13 +183,13 @@ export default (options) => {
 
         if (typeof opts === 'string' && opts.match(/^https?/)) {
           // URL
-          return req.post('/' + addressString)
+          return req.post('/' + addressPath)
             .type('form')
             .send({ remoteURL: opts })
             .result()
             .nodeify(cb);
         }
-        const request = req.put('/' + addressString);
+        const request = req.put('/' + addressPath);
         // File path
         if (typeof opts === 'string') {
           request.attach('file', opts);
@@ -159,62 +207,80 @@ export default (options) => {
           .nodeify(cb);
       },
       destroy: (sha1, cb) => {
-        return req.del('/' + addressString + '/sha1/' + sha1)
+        return req.del('/' + addressPath + '/sha1/' + sha1)
           .result()
           .nodeify(cb);
       },
       meta: (sha1, cb) => {
-        return req.get('/' + addressString + '/sha1/' + sha1 + '?meta')
+        return req.get('/' + addressPath + '/sha1/' + sha1 + '?meta')
+          .result()
+          .nodeify(cb);
+      },
+      torrent: (sha1, opts = {}, cb) => {
+        let uri = '/' + addressPath + '/sha1/' + sha1 + '/torrent';
+        if (opts.json) {
+          uri += '.json';
+          return req.get(uri).result().nodeify(cb);
+        }
+        return req.get(uri)
+          .buffer()
+          .parse(bufParser)
           .result()
           .nodeify(cb);
       },
       index: (cb) => {
-        return req.get('/' + addressString)
+        return req.get('/' + addressPath)
           .result()
           .nodeify(cb);
       },
       get: (sha1, cb) => {
-        return req.get('/' + addressString + '/sha1/' + sha1)
-          // .buffer()
+        return req.get('/' + addressPath + '/sha1/' + sha1)
+          // .buffer(true)
           .result()
           .nodeify(cb);
       },
       uriPreview: (sha1) => {
-        return options.host + '/' + addressString + '/sha1/' + sha1;
+        return options.host + '/' + addressPath + '/sha1/' + sha1;
       },
     },
-    batch: (paths, cb) => {
+    batch: (uris, cb) => {
       const payload = {};
-      paths.forEach((path) => {
-        payload[path] = {
+      uris.forEach((_uri) => {
+        let uri = _uri;
+        if (!uri.match(/^https?:/)) {
+          uri = options.host + path.join('/', uri);
+        }
+        payload[url.parse(uri).path] = {
+          uri,
           method: 'GET',
-          uri: path,
         };
       });
       return req.post('/batch')
         .send(payload)
         .result()
+        .then((results) => {
+          return results;
+        })
+        .nodeify(cb);
+    },
+    status: (cb) => {
+      return req.get('/status')
+        .result()
         .nodeify(cb);
     },
     wallet: {
       get: (cb) => {
-        return req.get('/' + addressString + '/wallet')
+        return req.get('/' + addressPath + '/wallet')
           .result()
           .nodeify(cb);
       },
       deposit: (cb) => {
-        return req.get('/' + addressString + '/wallet')
-          .end((err, res) => {
-            res.body = {
-              deposit_address: res.body.deposit_address,
-            };
-            cb(err, res);
-          })
-          .result()
+        return req.get('/' + addressPath + '/wallet')
+          .result('deposit_address')
           .nodeify(cb);
       },
       withdraw: (amount, address, cb) => {
-        return req.post('/' + addressString + '/wallet/transactions')
+        return req.post('/' + addressPath + '/wallet/transactions')
           .send({ type: 'withdraw', address: address, amount: amount })
           .result()
           .nodeify(cb);
@@ -222,7 +288,7 @@ export default (options) => {
     },
     transactions: {
       index: (cb) => {
-        return req.get('/' + addressString + '/wallet/transactions')
+        return req.get('/' + addressPath + '/wallet/transactions')
           .result()
           .nodeify(cb);
       },
