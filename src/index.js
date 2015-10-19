@@ -239,6 +239,13 @@ export default (options) => {
           .result()
           .nodeify(cb);
       },
+      thumb: (sha1, cb) => {
+        return req.get('/' + addressPath + '/sha1/' + sha1 + '/thumb')
+          .buffer()
+          .parse(bufParser)
+          .result()
+          .nodeify(cb);
+      },
       uriPreview: (sha1) => {
         return options.host + '/' + addressPath + '/sha1/' + sha1;
       },

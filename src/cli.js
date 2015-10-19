@@ -59,7 +59,7 @@ const initClient = (_config) => {
   const config = _config || initConfig();
   return bitstoreClient({
     privateKey: config.privateKey,
-    endpoint: config.host,
+    host: config.host,
     network: config.network,
   });
 };
