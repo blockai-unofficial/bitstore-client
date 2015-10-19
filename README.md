@@ -20,7 +20,7 @@ Every digital file has a unique hash. Think of it like a fingerprint. If any of 
 
 # Browser Usage
 
-In our examples we're going to use ```bitcoinjs-lib``` to create our wallet.
+In our examples we're going to use `bitcoinjs-lib` to create our wallet.
 
 ## Bitcoin Wallet
 
@@ -53,9 +53,9 @@ var commonWallet = {
 }
 ```
 
-We'll need to provide an instance of a commonBlockchain which will provide functions for signing a transaction, propagating a trasnaction, and looking up a transaction by ```txid```.
+We'll need to provide an instance of a commonBlockchain which will provide functions for signing a transaction, propagating a trasnaction, and looking up a transaction by `txid`.
 
-In this example we're using a testnet version that is provided by ```blockcypher-unofficial```.
+In this example we're using a testnet version that is provided by `blockcypher-unofficial`.
 
 ```javascript
 var commonBlockchain = require('blockcypher-unofficial')({
@@ -74,9 +74,9 @@ var bitstoreClient = bitstore(commonWallet);
 
 var bitstoreDepositAddress, bitstoreBalance;
 
-bitstoreClient.wallet.get(function (err, res) {
-  bitstoreDepositAddress = res.body.deposit_address;
-  bitstoreBalance = res.body.balance;
+bitstoreClient.wallet.get(function (err, wallet) {
+  bitstoreDepositAddress = wallet.deposit_address;
+  bitstoreBalance = wallet.balance;
 });
 ```
 
@@ -106,8 +106,7 @@ var file; // a browser File object returned from drop or file select form
 
 var hash_sha1, hash_sha256, hash_btih, uri, size, torrent;
 
-bitstoreClient.files.put(file, function (err, res) {
-  var receipt = res.body;
+bitstoreClient.files.put(file, function (err, receipt) {
   hash_sha1 = receipt.hash_sha1;
   hash_sha256 = receipt.hash_sha256;
   hash_btih = receipt.hash_btih;
@@ -119,16 +118,33 @@ bitstoreClient.files.put(file, function (err, res) {
 
 # Command Line Usage
 
-Usage: `PRIVATEKEY=somekey NETWORK=testnet bitstore action`
+```bash
+$ cat ~/.bitstore
+{
+  "privateKey": "your private key (used for authentication)",
+  "network": "livenet"
+}
 
-Actions:
+$ bitstore --help
 
-put <path> Upload a file
+  Usage: bitstore [options] [command]
 
-Example:
 
-`PRIVATEKEY=KyjhazeX7mXpHedQsKMuGh56o3rh8hm8FGhU3H6HPqfP9pA4YeoS bitstore put ./README.md`
+  Commands:
 
-Testing:
+    files                               list uploaded files
+    files:put|upload <filePath>         upload local file or url
+    files:meta <sha1>                   file metadata
+    files:torrent <sha1>                torrent json
+    files:destroy|rm <sha1>             destroy file
+    wallet                              show wallet
+    wallet:deposit                      deposit to wallet
+    wallet:withdraw <amount> <address>  withdraw from wallet
+    transactions                        list transactions
+    status                              bitstore server status
 
-`HOST=http://docker:3000 PRIVATEKEY=KyjhazeX7mXpHedQsKMuGh56o3rh8hm8FGhU3H6HPqfP9pA4YeoS ./src/cli.js put ./README.md`
+  Options:
+
+    -h, --help     output usage information
+    -V, --version  output the version number
+```
