@@ -16,7 +16,7 @@ Every digital file has a unique hash. Think of it like a fingerprint. If any of 
 
 # Install
 
-`npm install bitstore-client`
+`npm install bitstore`
 
 # Browser Usage
 
