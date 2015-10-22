@@ -53,7 +53,7 @@ var commonWallet = {
 }
 ```
 
-We'll need to provide an instance of a commonBlockchain which will provide functions for signing a transaction, propagating a trasnaction, and looking up a transaction by `txid`.
+We'll need to provide an instance of a commonBlockchain which will provide functions for signing a transaction, propagating a transaction, and looking up a transaction by `txid`.
 
 In this example we're using a testnet version that is provided by `blockcypher-unofficial`.
 
