@@ -6,6 +6,7 @@ import path from 'path';
 import bitcoin from 'bitcoinjs-lib';
 // see https://github.com/bitpay/bitcore-message/issues/15
 import url from 'url';
+import pkg from '../package.json';
 
 // Patch superagent to support promises
 patchSuperagent(superagent);
@@ -40,6 +41,8 @@ export default (options) => {
     options.host = defaultHosts[options.network];
   }
 
+  options.userAgent = options.userAgent || 'bitstore-cli/v' + pkg.version;
+
   let network;
   if (options.network === 'testnet') {
     network = bitcoin.networks.testnet;
@@ -72,7 +75,12 @@ export default (options) => {
     ['get', 'post', 'put', 'del'].forEach((method) => {
       reqObj[method] = (resource) => {
         const agent = superagent[method](options.host + resource);
-        // TODO: set this as .auth() method on agent object
+        if (!process.browser) {
+          // If not in the browser, set the User-Agent. Browsers don't allow
+          // setting of User-Agent, so we must disable this when run in the
+          // browser (browserify sets process.browser).
+          agent.set('User-Agent', options.userAgent);
+        }
 
         // TODO: set X-BTC-Pubkey and X-BTC-Signature
         // X-BTC-Pubkey identifies the user
