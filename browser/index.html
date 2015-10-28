@@ -6,12 +6,6 @@
 <body>
   <pre id="log"></pre>
   <script>
-    var encodeStr = function (rawStr) {
-      return rawStr.replace(/[\u00A0-\u9999<>\&]/gim, function(i) {
-       return '&#'+i.charCodeAt(0)+';';
-      });
-    };
-
     var log = function() {
       var logEle = document.getElementById('log');
       return function (something) {
@@ -25,28 +19,19 @@
         if (typeof something !== 'string')
           something = JSON.stringify(something, null, 2);
 
-        something = encodeStr(something);
-
         logEle.innerHTML += something;
         logEle.innerHTML += '\n';
       }
     }();
 
     var client = bitstore({
-      endpoint: 'https://bitstore-test.blockai.com',
       privateKey: 'KyjhazeX7mXpHedQsKMuGh56o3rh8hm8FGhU3H6HPqfP9pA4YeoS',
       network: 'testnet'
     });
 
-    function handler (err, res) {
-      if (err) return log(err);
-      log(res.status);
-      log(res.body);
-    }
-
-    client.wallet.get(handler);
-    client.transactions.index(handler);
-
+    client.wallet.get().then((wallet) => {
+      log(wallet);
+    });
   </script>
 </body>
 </html>

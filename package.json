@@ -6,6 +6,7 @@
     "lint": "eslint ./src ./test",
     "test": "mocha test/ --opts mocha.opts",
     "build": "babel ./src --out-dir ./lib --copy-files",
+    "bundle": "npm run build && browserify ./lib/index.js -s bitstore > browser/bundle.js",
     "pretest": "npm run lint",
     "cli": "babel-node -- ./src/cli.js",
     "preversion": "npm test",
