@@ -307,6 +307,12 @@ export default (options) => {
           .result()
           .nodeify(cb);
       },
+      sendRaw: (txHex, cb) => {
+        return req.post('/' + addressPath + '/wallet/transactions/sendRaw')
+          .send({ txHex })
+          .result()
+          .nodeify(cb);
+      },
     },
   };
 };

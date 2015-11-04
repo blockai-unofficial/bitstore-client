@@ -31,9 +31,11 @@ const success = (text) => {
   process.exit(0);
 };
 
-const initConfig = () => {
+const defaultConfigPath = path.join(process.env.HOME, '.bitstore');
+
+const initConfig = (configPath = commander.config) => {
   const config = nconf
-    .file(path.join(process.env.HOME, '.bitstore'))
+    .file(configPath)
     .defaults({
       network: 'livenet',
     })
@@ -49,7 +51,7 @@ const initConfig = () => {
   }
 
   if (!config.privateKey) {
-    exit(`Configure { privateKey: "" } in ${process.env.HOME}/.bitstore`);
+    exit(`Configure { privateKey: "" } in ${configPath}`);
   }
 
   return config;
@@ -65,7 +67,8 @@ const initClient = (_config) => {
 };
 
 commander
-  .version('bitstore version: ' + cliPkg.version + '\n');
+  .version('bitstore version: ' + cliPkg.version + '\n')
+  .option('-c, --config [path]', 'location of config file', defaultConfigPath);
 
 commander
   .command('files')
