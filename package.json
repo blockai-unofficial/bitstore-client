@@ -60,5 +60,5 @@
     "mocha": "^2.2.4",
     "semantic-release": "^4.3.5"
   },
-  "version": "2.2.0"
+  "version": "2.3.0"
 }
