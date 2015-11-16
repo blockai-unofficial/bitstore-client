@@ -60,7 +60,7 @@
     "mocha": "^2.2.4",
     "semantic-release": "^4.3.5"
   },
-  "version": "2.4.0",
+  "version": "2.4.1",
   "config": {
     "commitizen": {
       "path": "node_modules/cz-conventional-changelog/"
