@@ -329,11 +329,11 @@ export default (options) => {
           .result()
           .nodeify(cb);
       },
-      delete: (key, cb) => {
+      del: (key, cb) => {
         if (key === undefined) {
           throw new Error('missing key argument');
         }
-        return req.delete('/' + addressPath + '/keys' + key)
+        return req.del('/' + addressPath + '/keys' + key)
           .result()
           .nodeify(cb);
       },
