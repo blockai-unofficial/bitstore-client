@@ -70,7 +70,7 @@ export default (options) => {
    * and adds authentication option.
    *
    */
-  const req = () => {
+  const req = (() => {
     const reqObj = {};
     ['get', 'post', 'put', 'del'].forEach((method) => {
       reqObj[method] = (resource) => {
@@ -175,7 +175,7 @@ export default (options) => {
       };
     });
     return reqObj;
-  }();
+  })();
 
   // Override default address for testing auth in bitstore
   const addressPath = options.addressPath ? options.addressPath : addressString;
@@ -310,6 +310,30 @@ export default (options) => {
       sendRaw: (txHex, cb) => {
         return req.post('/' + addressPath + '/wallet/transactions/sendRaw')
           .send({ txHex })
+          .result()
+          .nodeify(cb);
+      },
+    },
+    keys: {
+      get: (key = '/', cb) => {
+        return req.get('/' + addressPath + '/keys' + key)
+          .result()
+          .nodeify(cb);
+      },
+      put: (key, value, cb) => {
+        if (key === undefined || value === undefined) {
+          throw new Error('missing key or value arguments');
+        }
+        return req.put('/' + addressPath + '/keys' + key)
+          .send({ value })
+          .result()
+          .nodeify(cb);
+      },
+      delete: (key, cb) => {
+        if (key === undefined) {
+          throw new Error('missing key argument');
+        }
+        return req.delete('/' + addressPath + '/keys' + key)
           .result()
           .nodeify(cb);
       },
