@@ -152,4 +152,28 @@ commander
     client.status().then(success).catch(exit);
   });
 
+commander
+  .command('keys:put <key> <value>')
+  .description('put key in key-value store')
+  .action((key, value) => {
+    const client = initClient();
+    client.keys.put(key, value).then(success).catch(exit);
+  });
+
+commander
+  .command('keys:get <key>')
+  .description('get key from key-value store')
+  .action((key) => {
+    const client = initClient();
+    client.keys.get(key).then(success).catch(exit);
+  });
+
+commander
+  .command('keys:destroy <key>')
+  .description('remove key from key-value store')
+  .action((key) => {
+    const client = initClient();
+    client.keys.del(key).then(success).catch(exit);
+  });
+
 commander.parse(process.argv);
