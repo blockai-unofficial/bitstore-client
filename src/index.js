@@ -181,7 +181,7 @@ export default (options) => {
   const addressPath = options.addressPath ? options.addressPath : addressString;
 
   return {
-    req: req,
+    req,
     address: addressString,
     files: {
       put: (opts, cb) => {
@@ -296,7 +296,7 @@ export default (options) => {
       },
       withdraw: (amount, address, cb) => {
         return req.post('/' + addressPath + '/wallet/transactions')
-          .send({ type: 'withdraw', address: address, amount: amount })
+          .send({ type: 'withdraw', address, amount })
           .result()
           .nodeify(cb);
       },
@@ -336,6 +336,30 @@ export default (options) => {
         return req.del('/' + addressPath + '/keys' + key)
           .result()
           .nodeify(cb);
+      },
+    },
+    billing: {
+      payment: {
+        get: () => {
+          throw new Error('Not implemented yet');
+        },
+        set: (source, cb) => {
+          return req.put('/' + addressPath + '/billing/payment')
+            .send({ source })
+            .result()
+            .nodeify(cb);
+        },
+      },
+      plan: {
+        get: () => {
+          throw new Error('Not implemented yet');
+        },
+        set: (plan, cb) => {
+          return req.put('/' + addressPath + '/billing/plan')
+            .send({ plan })
+            .result()
+            .nodeify(cb);
+        },
       },
     },
   };
