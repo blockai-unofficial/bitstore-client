@@ -340,8 +340,10 @@ export default (options) => {
     },
     billing: {
       payment: {
-        get: () => {
-          throw new Error('Not implemented yet');
+        get: (cb) => {
+          return req.get('/' + addressPath + '/billing/payment')
+            .result()
+            .nodeify(cb);
         },
         set: (source, cb) => {
           return req.put('/' + addressPath + '/billing/payment')
@@ -351,8 +353,10 @@ export default (options) => {
         },
       },
       plan: {
-        get: () => {
-          throw new Error('Not implemented yet');
+        get: (cb) => {
+          return req.get('/' + addressPath + '/billing/plan')
+            .result()
+            .nodeify(cb);
         },
         set: (plan, cb) => {
           return req.put('/' + addressPath + '/billing/plan')

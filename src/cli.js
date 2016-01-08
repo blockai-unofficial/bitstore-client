@@ -24,7 +24,9 @@ const exit = (text) => {
 
 const success = (text) => {
   if (text.body) {
-    console.log(chalk.green(inspect(text.body)));
+    console.log(chalk.green(inspect(text.body, {
+      depth: null,
+    })));
   } else {
     console.log(text);
   }
@@ -174,6 +176,40 @@ commander
   .action((key) => {
     const client = initClient();
     client.keys.del(key).then(success).catch(exit);
+  });
+
+commander
+  .command('billing:payment:set <number> <expMonth> <expYear> [cvc]')
+  .description('set or update credit card for billing')
+  .action((number, expMonth, expYear, cvc) => {
+    const client = initClient();
+    client.billing.payment.set({
+      number, exp_month: expMonth, exp_year: expYear, cvc,
+    }).then(success).catch(exit);
+  });
+
+commander
+  .command('billing:payment:get')
+  .description('retrieve payment info')
+  .action(() => {
+    const client = initClient();
+    client.billing.payment.get().then(success).catch(exit);
+  });
+
+commander
+  .command('billing:plan:set <plan>')
+  .description('set or update membership plan (pro, amateur, master)')
+  .action((plan) => {
+    const client = initClient();
+    client.billing.plan.set(plan).then(success).catch(exit);
+  });
+
+commander
+  .command('billing:plan:get')
+  .description('get current membership plan')
+  .action(() => {
+    const client = initClient();
+    client.billing.plan.get().then(success).catch(exit);
   });
 
 commander.parse(process.argv);
